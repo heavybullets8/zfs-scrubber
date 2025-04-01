@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 : "${PUSHOVER_NOTIFICATION:=false}"
 : "${ACTION:=scrub}"
 
