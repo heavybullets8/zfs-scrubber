@@ -118,93 +118,16 @@ scrub_pool() {
     done
 }
 
-cleanup_snapshots() {
-    echo "===================================================="
-    echo "Starting cleanup on pool: $ZFS_POOL"
-    echo "===================================================="
-    mapfile -t snapshot_clone_pairs < <(zfs get -H -o name,value -t snapshot clones | grep "^${ZFS_POOL}/pvc-" | grep -v "[[:space:]]-$")
-    if [ -z "${snapshot_clone_pairs[*]:-}" ]; then
-        echo "Nothing to cleanup."
-        return
-    fi
-
-    local success_count=0
-    local failure_count=0
-
-    for line in "${snapshot_clone_pairs[@]}"; do
-        temp_source=$(echo "$line" | awk -F '\t' '{print $1}' | cut -d'@' -f1)
-        snapshot_name=$(echo "$line" | awk -F '\t' '{print $1}' | cut -d'@' -f2)
-        active_pvc=$(echo "$line" | awk -F '\t' '{print $2}')
-
-        if [ -z "$temp_source" ] || [ -z "$snapshot_name" ] || [ -z "$active_pvc" ]; then
-            echo "Error: Invalid data found"
-            echo "  Temporary source: ${temp_source:-<empty>}"
-            echo "  Snapshot: ${snapshot_name:-<empty>}"
-            echo "  Active PVC: ${active_pvc:-<empty>}"
-            echo "Skipping this pair..."
-            echo
-            ((failure_count++))
-            continue
-        fi
-
-        echo
-        echo "Processing Snapshot Pair"
-        echo "----------------------"
-        echo "  Temporary source: $temp_source"
-        echo "  Snapshot: $snapshot_name"
-        echo "  Active PVC: $active_pvc"
-        echo
-
-        echo "  → Promoting active PVC"
-        if ! zfs promote "$active_pvc"; then
-            echo "    Error: Failed to promote: $active_pvc"
-            ((failure_count++))
-            continue
-        fi
-
-        echo "  → Destroying temporary source"
-        if ! zfs destroy "$temp_source"; then
-            echo "    Error: Failed to destroy dataset: $temp_source"
-            ((failure_count++))
-            continue
-        fi
-
-        echo "  → Destroying snapshot"
-        if ! zfs destroy "$active_pvc@$snapshot_name"; then
-            echo "    Error: Failed to destroy snapshot: $active_pvc@$snapshot_name"
-            ((failure_count++))
-            continue
-        fi
-
-        echo
-        echo "  ✓ Cleanup complete for this pair"
-        echo
-        ((success_count++))
-    done
-
-    echo "===================================================="
-    echo "Cleanup completed on pool: $ZFS_POOL"
-    echo "===================================================="
-
-    if [ "$success_count" -gt 0 ] && [ "$failure_count" -eq 0 ]; then
-        send_pushover_notification "<b>✅ Cleanup completed successfully on pool:</b> ${ZFS_POOL}"$'\n'"All $success_count snapshot pairs cleaned up." "ZFS Cleanup Completed"
-    elif [ "$failure_count" -gt 0 ]; then
-        send_pushover_notification "<b>⚠️ Cleanup completed with errors on pool:</b> ${ZFS_POOL}"$'\n'"Successful cleanups: $success_count"$'\n'"Failed cleanups: $failure_count" "ZFS Cleanup Completed with Errors"
-    fi
-}
-
 case "$ACTION" in
 scrub)
     scrub_pool
     ;;
 cleanup)
-    cleanup_snapshots
+    echo "Warning: ACTION=cleanup is no longer supported. Skipping."
     ;;
 all)
     scrub_pool
-    echo
-    echo
-    cleanup_snapshots
+    echo "Warning: Snapshot cleanup is no longer supported. Skipping cleanup."
     ;;
 *)
     echo "Error: Invalid ACTION specified. Use 'scrub', 'cleanup', or 'all'."

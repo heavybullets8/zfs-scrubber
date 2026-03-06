@@ -1,6 +1,6 @@
-# ZFS Scrub and Cleanup Script for Talos Linux with Pushover Notifications
+# ZFS Scrub Script for Talos Linux with Pushover Notifications
 
-This repository contains a Bash script designed to perform ZFS pool scrubbing and cleanup operations within a Docker container, specifically tailored for **Talos Linux**. The script supports sending real-time notifications via Pushover when a scrub starts and completes.
+This repository contains a Bash script designed to perform ZFS pool scrubbing operations within a Docker container, specifically tailored for **Talos Linux**. The script supports sending real-time notifications via Pushover when a scrub starts and completes.
 
 The container now **dynamically downloads** the appropriate ZFS package based on the specified `TALOS_VERSION`, ensuring compatibility with your Talos Linux system.
 
@@ -16,7 +16,7 @@ Configure the script using the following environment variables:
 |-------------------------|----------|---------|-----------------------------------------------------------------------------------------------|
 | `ZFS_POOL`              | **Yes**  |         | Name of the ZFS pool on which to perform actions.                                             |
 | `TALOS_VERSION`         | **Yes**  |         | Talos Linux version to determine the compatible ZFS package.                                  |
-| `ACTION`                | No       | `scrub` | Action to perform: `scrub`, `cleanup`, or `all`.                                              |
+| `ACTION`                | No       | `scrub` | Action to perform (`scrub` is the supported action).                                           |
 | `PUSHOVER_NOTIFICATION` | No       | `false` | Set to `true` to enable Pushover notifications.                                               |
 | `PUSHOVER_USER_KEY`     | Cond.    |         | Your Pushover User Key. Required if `PUSHOVER_NOTIFICATION` is `true`.                        |
 | `PUSHOVER_API_TOKEN`    | Cond.    |         | Your Pushover API Token. Required if `PUSHOVER_NOTIFICATION` is `true`.                       |
@@ -26,12 +26,6 @@ Configure the script using the following environment variables:
 ### Actions
 
 - **`scrub`**: Starts a ZFS scrub on the specified pool.
-- **`cleanup`**: Cleans up snapshots and clones in the specified pool.
-- **`all`**: Performs both scrubbing and cleanup.
-
-### Cleanup Action Warning
-
-**Use with caution**: The `cleanup` action deletes **all snapshots and clones** within the specified ZFS pool. This is particularly useful when using tools like [VolSync](https://volsync.readthedocs.io/en/latest/) with the `clone` `copyMethod` in `ReplicationSource`. If you're not using VolSync in this manner, the cleanup action may delete snapshots or clones that you intend to keep.
 
 ## Example Usage
 
@@ -57,7 +51,6 @@ spec:
     remediation:
       retries: 3
   upgrade:
-    cleanupOnFail: true
     remediation:
       strategy: rollback
       retries: 3
