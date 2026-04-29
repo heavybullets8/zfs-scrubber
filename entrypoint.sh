@@ -16,7 +16,7 @@ fi
 if [ "$exit_bool" = false ]; then
     echo "Verifying ZFS image signature..."
     if ! cosign verify \
-        --certificate-identity-regexp '(siderolabs\.com|talos-production\.iam\.gserviceaccount\.com)$' \
+        --certificate-identity-regexp '@(siderolabs\.com|talos-production\.iam\.gserviceaccount\.com)$' \
         --certificate-oidc-issuer https://accounts.google.com \
         "$ZFS_IMAGE" >/dev/null 2>&1; then
         echo "Error: Image signature verification failed for $ZFS_IMAGE."
